@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ListaMercado
 
-## Getting Started
+ListaMercado es una aplicación para mantener siempre disponible una lista de posibles productos para comprar en el supermercado.
 
-First, run the development server:
+La idea principal es que el uso sea simple, rápido y compartible. Cualquier persona debería poder entrar, ver la lista y sumar o marcar productos sin fricción.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Objetivo del proyecto
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Centralizar una lista viva de productos potenciales para compras del supermercado.
+- Permitir el acceso simple mediante usuarios temporales o sesiones temporales.
+- Hacer posible que varias personas colaboren sobre la misma lista.
+- Mantener un flujo liviano para cargar, revisar y completar productos en grupo.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Concepto de uso
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+El proyecto está pensado para escenarios cotidianos:
 
-## Learn More
+- una persona crea o abre una sesión temporal;
+- comparte esa sesión con otras personas;
+- cada participante agrega productos que faltan o marca los que ya están resueltos;
+- la lista queda siempre accesible mientras la sesión siga vigente.
 
-To learn more about Next.js, take a look at the following resources:
+## Principios del producto
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Simple antes que complejo.
+- Compartido antes que individual.
+- Temporal antes que rígido.
+- Práctico antes que formal.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Qué debería resolver en el futuro
 
-## Deploy on Vercel
+- Entrada de usuario sin pasos pesados.
+- Sesiones temporales fáciles de compartir entre varias personas.
+- Experiencia clara para sumar productos rápidamente desde el celular o la compu.
+- Base suficiente para que futuros agentes puedan extender el producto sin perder contexto.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Estado del repositorio
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Por ahora el repositorio conserva una base inicial de Next.js y documentación de orientación para agentes. La lógica de negocio todavía no está implementada.
+
+## Cómo trabajar este proyecto
+
+- Antes de cambiar funcionalidades, leer `AGENTS.md` y este `README.md`.
+- Mantener el foco en la experiencia colaborativa y en la simplicidad del flujo.
+- Evitar decisiones de arquitectura innecesarias mientras el producto siga definiéndose.
+- Si se agregan reglas nuevas para agentes, reflejarlas también en la documentación principal.
+
+## Próximos pasos naturales
+
+- Definir el modelo de sesión temporal.
+- Definir cómo se comparte la lista entre personas.
+- Diseñar la estructura mínima de productos y estados.
+- Implementar la primera versión del flujo de uso simple.
