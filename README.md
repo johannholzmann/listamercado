@@ -18,7 +18,7 @@ El proyecto esta pensado para escenarios cotidianos:
 - una persona crea una lista nueva;
 - la lista recibe un enlace secreto estable;
 - comparte ese enlace con otras personas;
-- cada participante agrega productos que faltan o cambia el estado de los que ya estan resueltos;
+- cada participante agrega productos que faltan o cambia el estado de los que ya estan comprados o descartados;
 - la lista queda persistida para volver cuando haga falta.
 
 ## Principios del producto
@@ -33,7 +33,7 @@ El proyecto esta pensado para escenarios cotidianos:
 - La lista vive en un store persistente del backend del proyecto.
 - La sesion temporal identifica al dispositivo o participante, pero no requiere login.
 - Los productos se guardan como texto libre para no frenar la carga rapida.
-- Cada item puede pasar por los estados `pendiente`, `agregado` y `resuelto`.
+- Cada item puede pasar por los estados `pendiente`, `agregado` y `resuelto`, que en la interfaz se muestran como `por comprar`, `comprado` y `ya no hace falta`.
 
 ## Que deberia resolver en el futuro
 

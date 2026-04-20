@@ -83,7 +83,7 @@ export default async function Home() {
                 ],
                 [
                   "Estados simples",
-                  "Pendiente, agregado y resuelto para colaborar rapido.",
+                  "Por comprar, comprado y ya no hace falta para colaborar rapido.",
                 ],
               ].map(([title, text]) => (
                 <article

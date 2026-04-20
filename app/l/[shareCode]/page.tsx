@@ -18,15 +18,15 @@ import { CopyLinkButton } from "@/app/components/copy-link-button";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
 
 const STATUS_TITLES: Record<(typeof ITEM_STATUSES)[number], string> = {
-  pendiente: "Pendientes",
-  agregado: "Agregados",
-  resuelto: "Resueltos",
+  pendiente: "Por comprar",
+  agregado: "Comprados",
+  resuelto: "Ya no hace falta",
 };
 
 const STATUS_HELPERS: Record<(typeof ITEM_STATUSES)[number], string> = {
-  pendiente: "Lo que falta comprar.",
-  agregado: "Lo que ya se sumo a la lista.",
-  resuelto: "Lo que ya quedo resuelto.",
+  pendiente: "Todavia falta comprarlo.",
+  agregado: "Ya se compro o ya no queda pendiente.",
+  resuelto: "Ya no hace falta llevarlo.",
 };
 
 const STATUS_BADGES: Record<(typeof ITEM_STATUSES)[number], string> = {
@@ -109,9 +109,9 @@ export default async function ListPage({
             <div className="grid gap-3 sm:grid-cols-3">
               {(
                 [
-                  ["pendiente", "Productos pendientes", counts.pendiente],
-                  ["agregado", "Ya agregados", counts.agregado],
-                  ["resuelto", "Resueltos", counts.resuelto],
+                  ["pendiente", "Por comprar", counts.pendiente],
+                  ["agregado", "Comprados", counts.agregado],
+                  ["resuelto", "Ya no hace falta", counts.resuelto],
                 ] as const
               ).map(([key, label, value]) => (
                 <article
@@ -238,8 +238,8 @@ export default async function ListPage({
                                 </p>
                               </div>
                               <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${STATUS_BADGES[item.status]}`}>
-                                {item.status}
-                              </span>
+                          {STATUS_TITLES[item.status]}
+                        </span>
                             </div>
 
                             <form action={statusAction} className="mt-4">
@@ -251,7 +251,7 @@ export default async function ListPage({
                                   value="pendiente"
                                   className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)]"
                                 >
-                                  Pendiente
+                                  Por comprar
                                 </button>
                                 <button
                                   type="submit"
@@ -259,7 +259,7 @@ export default async function ListPage({
                                   value="agregado"
                                   className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)]"
                                 >
-                                  Agregado
+                                  Comprado
                                 </button>
                                 <button
                                   type="submit"
@@ -267,7 +267,7 @@ export default async function ListPage({
                                   value="resuelto"
                                   className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)]"
                                 >
-                                  Resuelto
+                                  Ya no hace falta
                                 </button>
                               </div>
                             </form>
@@ -286,7 +286,7 @@ export default async function ListPage({
               <p className="text-xs uppercase tracking-[0.24em] text-[color:rgba(255,255,255,0.68)]">
                 Como se comparte
               </p>
-                <h2 className="mt-3 font-display text-3xl leading-tight">
+              <h2 className="mt-3 font-display text-3xl leading-tight">
                 Un enlace secreto alcanza para colaborar.
               </h2>
               <p className="mt-4 text-sm leading-6 text-[color:rgba(255,255,255,0.78)]">
@@ -308,21 +308,21 @@ export default async function ListPage({
               <div className="mt-4 space-y-3 text-sm leading-6 text-[color:var(--muted)]">
                 <p>
                   <span className="font-semibold text-[color:var(--foreground)]">
-                    Pendiente:
+                    Por comprar:
                   </span>{" "}
-                  falta comprar o sumar.
+                  falta comprarlo.
                 </p>
                 <p>
                   <span className="font-semibold text-[color:var(--foreground)]">
-                    Agregado:
+                    Comprado:
                   </span>{" "}
-                  ya entro a la lista de esta vuelta.
+                  ya se compro o se resolvio en la compra.
                 </p>
                 <p>
                   <span className="font-semibold text-[color:var(--foreground)]">
-                    Resuelto:
+                    Ya no hace falta:
                   </span>{" "}
-                  ya se compro o ya no hace falta.
+                  se saco de la compra porque ya no hace falta.
                 </p>
               </div>
             </section>
