@@ -9,7 +9,6 @@ import {
   groupItemsByStatus,
   ITEM_STATUSES,
 } from "@/lib/store";
-import { formatQuantity } from "@/lib/item-metadata";
 import {
   addShoppingItem,
   renameShoppingList,
@@ -20,8 +19,8 @@ import { ParticipantCard } from "@/app/components/participant-card";
 import { CopyLinkButton } from "@/app/components/copy-link-button";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
-import { ShoppingItemDetailsForm } from "@/app/components/shopping-item-details-form";
 import { ShoppingItemForm } from "@/app/components/shopping-item-form";
+import { ShoppingStatusTabs } from "@/app/components/shopping-status-tabs";
 
 const STATUS_TITLES: Record<(typeof ITEM_STATUSES)[number], string> = {
   pendiente: "Por comprar",
@@ -29,24 +28,11 @@ const STATUS_TITLES: Record<(typeof ITEM_STATUSES)[number], string> = {
   resuelto: "Ya no hace falta",
 };
 
-const STATUS_HELPERS: Record<(typeof ITEM_STATUSES)[number], string> = {
-  pendiente: "Todavia falta comprarlo.",
-  agregado: "Ya se compro o quedo resuelto.",
-  resuelto: "Ya no hace falta llevarlo.",
-};
-
 const STATUS_BADGES: Record<(typeof ITEM_STATUSES)[number], string> = {
   pendiente: "border-amber-300 bg-amber-100 text-amber-950",
   agregado: "border-emerald-300 bg-emerald-100 text-emerald-950",
   resuelto: "border-slate-300 bg-slate-100 text-slate-950",
 };
-
-function prettyDate(value: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 export default async function ListPage({
   params,
@@ -80,7 +66,7 @@ export default async function ListPage({
       <SessionBootstrap shareCode={shareCode} />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(73,105,76,0.16),_transparent_36%),radial-gradient(circle_at_top_right,_rgba(232,140,65,0.16),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.32),_rgba(255,255,255,0))]" />
 
-      <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-4">
+      <div className="relative mx-auto flex w-full max-w-[88rem] flex-col gap-4">
         <SiteNavbar
           currentListHref={`/l/${shareCode}`}
           currentListLabel={list.title}
@@ -94,15 +80,11 @@ export default async function ListPage({
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
-                Lista activa
+                Lista
               </p>
               <h1 className="max-w-3xl font-display text-4xl leading-none text-[color:var(--foreground)] sm:text-5xl">
                 {list.title}
               </h1>
-              <p className="max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-base">
-                Una sola lista compartida para varias personas. El acceso es por
-                enlace secreto, sin cuentas complejas ni pasos pesados.
-              </p>
             </div>
 
             <div className="grid w-full gap-3 sm:grid-cols-3 lg:max-w-xl">
@@ -137,180 +119,54 @@ export default async function ListPage({
                 Compartir
               </p>
               <h2 className="font-display text-2xl text-[color:var(--foreground)]">
-                Copiar enlace para invitar a otras personas
+                Copiar enlace
               </h2>
-              <p className="text-sm leading-6 text-[color:var(--muted)]">
-                Quien tenga este enlace entra a la misma lista y ve los cambios al
-                instante.
-              </p>
             </div>
 
             <CopyLinkButton path={sharePath} />
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)]">
           <div className="space-y-4">
             <section
               id="productos"
               className="scroll-mt-24 rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)]"
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
                     Agregar producto
                   </p>
                   <h2 className="mt-1 font-display text-2xl text-[color:var(--foreground)]">
-                    Cargar rapido el producto y, si hace falta, sus detalles
+                    Agregar producto
                   </h2>
                 </div>
-                <p className="max-w-sm text-sm leading-6 text-[color:var(--muted)]">
-                  El titulo sigue siendo lo unico obligatorio. Marca, cantidad,
-                  unidad y notas quedan como contexto opcional.
-                </p>
               </div>
 
               <ShoppingItemForm action={addItemAction} shareCode={shareCode} />
             </section>
 
-            <section className="grid gap-4 xl:grid-cols-3">
-              {ITEM_STATUSES.map((status) => {
-                const listItems = groupedItems[status];
-
-                return (
-                  <article
-                    key={status}
-                    className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)]"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                          {STATUS_TITLES[status]}
-                        </p>
-                        <p className="mt-1 text-sm leading-6 text-[color:var(--muted)]">
-                          {STATUS_HELPERS[status]}
-                        </p>
-                      </div>
-                      <span
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${STATUS_BADGES[status]}`}
-                      >
-                        {listItems.length}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                      {listItems.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-8 text-center text-sm text-[color:var(--muted)]">
-                          Nada por ahora.
-                        </div>
-                      ) : (
-                        listItems.map((item) => (
-                          <article
-                            key={item.id}
-                            className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="space-y-2">
-                                <p className="text-base font-semibold text-[color:var(--foreground)]">
-                                  {item.name}
-                                </p>
-                                <div className="flex flex-wrap gap-2 text-xs text-[color:var(--muted)]">
-                                  {item.brand ? (
-                                    <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1">
-                                      Marca: {item.brand}
-                                    </span>
-                                  ) : null}
-                                  {formatQuantity(
-                                    item.quantityAmount,
-                                    item.quantityUnit,
-                                  ) ? (
-                                    <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1">
-                                      Cantidad:{" "}
-                                      {formatQuantity(
-                                        item.quantityAmount,
-                                        item.quantityUnit,
-                                      )}
-                                    </span>
-                                  ) : null}
-                                </div>
-                                {item.notes ? (
-                                  <p className="text-sm leading-6 text-[color:var(--muted)]">
-                                    {item.notes}
-                                  </p>
-                                ) : null}
-                                <p className="text-xs text-[color:var(--muted)]">
-                                  Guardado {prettyDate(item.createdAt)}
-                                </p>
-                              </div>
-                              <span
-                                className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${STATUS_BADGES[item.status]}`}
-                              >
-                                {STATUS_TITLES[item.status]}
-                              </span>
-                            </div>
-
-                            <form action={statusAction} className="mt-4">
-                              <input type="hidden" name="itemId" value={item.id} />
-                              <div className="grid grid-cols-3 gap-2">
-                                <button
-                                  type="submit"
-                                  name="status"
-                                  value="pendiente"
-                                  className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)]"
-                                >
-                                  Por comprar
-                                </button>
-                                <button
-                                  type="submit"
-                                  name="status"
-                                  value="agregado"
-                                  className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)]"
-                                >
-                                  Comprado
-                                </button>
-                                <button
-                                  type="submit"
-                                  name="status"
-                                  value="resuelto"
-                                  className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)] transition hover:border-[color:var(--accent)]"
-                                >
-                                  No hace falta
-                                </button>
-                              </div>
-                            </form>
-                            <ShoppingItemDetailsForm
-                              action={editItemAction}
-                              item={{
-                                id: item.id,
-                                name: item.name,
-                                brand: item.brand,
-                                quantityAmount: item.quantityAmount,
-                                quantityUnit: item.quantityUnit,
-                                notes: item.notes,
-                              }}
-                            />
-                          </article>
-                        ))
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </section>
+            <ShoppingStatusTabs
+              editItemAction={editItemAction}
+              statusAction={statusAction}
+              tabs={ITEM_STATUSES.map((status) => ({
+                status,
+                title: STATUS_TITLES[status],
+                badgeClass: STATUS_BADGES[status],
+                items: groupedItems[status],
+              }))}
+            />
           </div>
 
-        <aside className="space-y-4">
+          <aside className="space-y-4">
             <section className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]">
               <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                Renombrar lista
+                Renombrar
               </p>
               <h2 className="mt-2 font-display text-2xl text-[color:var(--foreground)]">
-                Guardada para volver cuando quieran
+                Cambiar nombre
               </h2>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
-                El titulo ayuda a distinguir listas cuando una misma persona
-                administra mas de una.
-              </p>
 
               <form action={renameAction} className="mt-4 flex flex-col gap-3">
                 <input
@@ -331,14 +187,11 @@ export default async function ListPage({
 
             <section className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]">
               <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                Mis listas
+                Listas
               </p>
               <h2 className="mt-2 font-display text-2xl text-[color:var(--foreground)]">
-                Volver a tus listas guardadas
+                Abrir guardadas
               </h2>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
-                Acá vive el listado completo de todo lo que creaste con tu sesión.
-              </p>
               <Link
                 href="/mis-listas"
                 className="mt-4 inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] transition hover:-translate-y-0.5 hover:border-[color:var(--accent)]"
@@ -352,8 +205,8 @@ export default async function ListPage({
               compact
               label={participant?.label ?? "Sesion temporal activa"}
               shareCode={shareCode}
-              heading="Tu sesion"
-              helperText="Tu nombre se usa en esta lista y en cualquier otra que crees con esta misma sesion."
+              heading="Sesion"
+              helperText="Nombre visible."
             />
           </aside>
         </section>
