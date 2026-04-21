@@ -60,6 +60,7 @@ La aplicacion ya cuenta con una primera version funcional de listas compartidas,
 - Definir `DATABASE_URL` con la conexion a Neon u otro Postgres compatible.
 - Ejecutar `npm run db:generate` cuando cambie `prisma/schema.prisma`.
 - Ejecutar `npm run db:migrate` para aplicar el esquema en la base elegida.
+- En Vercel, el build ejecuta `npm run vercel-build`, que corre `prisma generate`, `prisma migrate deploy` y luego `next build`.
 - Mantener el cliente de Prisma del lado del servidor; no exponer credenciales al browser.
 
 ## Acceso a listas propias
