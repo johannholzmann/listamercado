@@ -24,9 +24,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ListaMercado",
+  title: "que compramos",
   description:
-    "Lista compartida y persistente para compras del supermercado, con enlace secreto y productos de texto libre.",
+    "que compramos es una lista compartida y persistente para compras del supermercado, con enlace secreto y productos de texto libre.",
 };
 
 export default function RootLayout({

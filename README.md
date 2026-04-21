@@ -1,6 +1,6 @@
-# ListaMercado
+# quecompramos
 
-ListaMercado es una app para mantener siempre disponible una lista de compras compartida.
+quecompramos es una app para mantener siempre disponible una lista de compras compartida.
 
 La idea principal es que el uso sea simple, rapido y colaborativo. Cualquier persona con el enlace secreto deberia poder entrar, ver la lista y sumar o marcar productos sin friccion.
 

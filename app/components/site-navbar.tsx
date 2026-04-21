@@ -37,7 +37,7 @@ export function SiteNavbar({
               href="/"
               className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-2 text-sm font-semibold tracking-[0.18em] text-[color:var(--foreground)] transition hover:-translate-y-0.5 hover:border-[color:var(--accent)]"
             >
-              LISTAMERCADO
+              que compramos
             </Link>
             {sessionLabel ? (
               <span className="hidden rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-xs font-medium text-[color:var(--muted)] sm:inline-flex">

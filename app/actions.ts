@@ -14,8 +14,8 @@ import {
   type ItemStatus,
 } from "@/lib/store";
 
-const SESSION_COOKIE = "listamercado_session";
-const LAST_LIST_COOKIE = "listamercado_last_list";
+const SESSION_COOKIE = "quecompramos_session";
+const LAST_LIST_COOKIE = "quecompramos_last_list";
 const COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: "lax" as const,

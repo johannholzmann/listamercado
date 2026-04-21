@@ -1,4 +1,4 @@
-# ListaMercado
+# quecompramos
 
 Este repositorio contiene la base de una aplicación para llevar una lista de compras de supermercado que pueda mantenerse siempre a mano y compartirse entre varias personas.
 

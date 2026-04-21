@@ -13,8 +13,8 @@ import {
 
 export default async function Home() {
   const cookieStore = await cookies();
-  const lastShareCode = cookieStore.get("listamercado_last_list")?.value ?? null;
-  const participantId = cookieStore.get("listamercado_session")?.value ?? null;
+  const lastShareCode = cookieStore.get("quecompramos_last_list")?.value ?? null;
+  const participantId = cookieStore.get("quecompramos_session")?.value ?? null;
   const [lastList, ownedLists, participant] = await Promise.all([
     getLatestListByShareCode(lastShareCode),
     getOwnedListsByParticipantId(participantId),

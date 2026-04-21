@@ -52,7 +52,7 @@ export default async function ListPage({
 }) {
   const { shareCode } = await params;
   const cookieStore = await cookies();
-  const participantId = cookieStore.get("listamercado_session")?.value ?? null;
+  const participantId = cookieStore.get("quecompramos_session")?.value ?? null;
   const [details, participant] = await Promise.all([
     getListByShareCode(shareCode),
     participantId ? getParticipantById(participantId) : Promise.resolve(null),

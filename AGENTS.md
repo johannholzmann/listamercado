@@ -6,7 +6,7 @@ This version has breaking changes - APIs, conventions, and file structure may al
 
 ## Contexto del proyecto
 
-ListaMercado es una app para mantener siempre disponible una lista de posibles compras del supermercado.
+quecompramos es una app para mantener siempre disponible una lista de posibles compras del supermercado.
 
 La meta del producto es que varias personas puedan colaborar sobre la misma lista con el menor esfuerzo posible, usando sesiones temporales y un ingreso simple.
 

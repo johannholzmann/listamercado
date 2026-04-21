@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const { shareCode } = await params;
   const cookieStore = await cookies();
-  const participantId = cookieStore.get("listamercado_session")?.value ?? null;
+  const participantId = cookieStore.get("quecompramos_session")?.value ?? null;
   const query = new URL(request.url).searchParams.get("q") ?? "";
   const suggestions = await getProductSuggestions(
     shareCode,
