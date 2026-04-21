@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 
+import { BrandMark } from "@/app/components/brand-mark";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import {
@@ -44,7 +45,11 @@ export default async function MyListsPage() {
 
         <section className="rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
+            <div className="space-y-4">
+              <BrandMark
+                size="sm"
+                subtitle="Volver a tus listas guardadas sin buscar enlaces viejos."
+              />
               <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
                 Mis listas
               </p>

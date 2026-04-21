@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { createShoppingList } from "@/app/actions";
+import { BrandMark } from "@/app/components/brand-mark";
 import { ParticipantCard } from "@/app/components/participant-card";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
@@ -33,7 +34,11 @@ export default async function Home() {
         />
 
         <header className="flex flex-col gap-4 rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur md:flex-row md:items-center md:justify-between">
-          <div className="space-y-2">
+          <div className="space-y-4">
+            <BrandMark
+              size="md"
+              subtitle="Lista compartida, simple y persistente para cocinar y comprar en grupo."
+            />
             <h1 className="font-display text-4xl leading-none text-[color:var(--foreground)] sm:text-5xl">
               Una lista compartida, simple y persistente
             </h1>

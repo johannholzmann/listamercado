@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { BrandMark } from "@/app/components/brand-mark";
+
 type SiteNavbarProps = {
   currentListHref?: string | null;
   currentListLabel?: string | null;
@@ -35,9 +37,9 @@ export function SiteNavbar({
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-2 text-sm font-semibold tracking-[0.18em] text-[color:var(--foreground)] transition hover:-translate-y-0.5 hover:border-[color:var(--accent)]"
+              className="inline-flex items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2 py-2 transition hover:-translate-y-0.5 hover:border-[color:var(--accent)]"
             >
-              que compramos
+              <BrandMark size="sm" />
             </Link>
             {sessionLabel ? (
               <span className="hidden rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-xs font-medium text-[color:var(--muted)] sm:inline-flex">

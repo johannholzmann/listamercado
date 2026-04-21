@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   title: "que compramos",
   description:
     "que compramos es una lista compartida y persistente para compras del supermercado, con enlace secreto y productos de texto libre.",
+  icons: {
+    icon: "/quecompramos.png",
+  },
 };
 
 export default function RootLayout({
