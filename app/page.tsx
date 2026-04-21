@@ -2,15 +2,30 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { createShoppingList } from "@/app/actions";
+import { ParticipantCard } from "@/app/components/participant-card";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
-import { getLatestListByShareCode, getParticipantById } from "@/lib/store";
+import {
+  getLatestListByShareCode,
+  getParticipantById,
+  getOwnedListsByParticipantId,
+} from "@/lib/store";
+
+function prettyDate(value: string) {
+  return new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
 
 export default async function Home() {
   const cookieStore = await cookies();
   const lastShareCode = cookieStore.get("listamercado_last_list")?.value ?? null;
   const participantId = cookieStore.get("listamercado_session")?.value ?? null;
-  const lastList = getLatestListByShareCode(lastShareCode);
-  const participant = participantId ? getParticipantById(participantId) : null;
+  const [lastList, ownedLists, participant] = await Promise.all([
+    getLatestListByShareCode(lastShareCode),
+    getOwnedListsByParticipantId(participantId),
+    participantId ? getParticipantById(participantId) : Promise.resolve(null),
+  ]);
 
   return (
     <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
@@ -32,11 +47,12 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-sm text-[color:var(--muted)]">
-            <p className="text-xs uppercase tracking-[0.22em]">Sesion temporal</p>
-            <p className="mt-1 font-medium text-[color:var(--foreground)]">
-              {participant?.label ?? "Se crea automaticamente al usar la app"}
-            </p>
+          <div className="w-full max-w-xl">
+            <ParticipantCard
+              label={participant?.label ?? "Se crea automaticamente al usar la app"}
+              heading="Sesion temporal"
+              helperText="Edita el nombre para que tus listas y el grupo te identifiquen mejor."
+            />
           </div>
         </header>
 
@@ -102,6 +118,54 @@ export default async function Home() {
           </div>
 
           <aside className="space-y-4">
+            <section className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]">
+              <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                Tus listas
+              </p>
+              <h2 className="mt-2 font-display text-3xl text-[color:var(--foreground)]">
+                Todo lo que creaste con tu nombre
+              </h2>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[color:var(--muted)]">
+                Estas son las listas que quedaron asociadas a tu participante
+                temporal. Desde aca podes volver a cualquiera sin buscar el
+                enlace.
+              </p>
+
+              <div className="mt-5 space-y-3">
+                {ownedLists.length > 0 ? (
+                  ownedLists.map((list) => (
+                    <Link
+                      key={list.id}
+                      href={`/l/${list.shareCode}`}
+                      className="block rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 transition hover:-translate-y-0.5 hover:border-[color:var(--accent)]"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="truncate font-display text-2xl text-[color:var(--foreground)]">
+                            {list.title}
+                          </p>
+                          <p className="mt-1 text-sm text-[color:var(--muted)]">
+                            {list.itemCount} productos
+                          </p>
+                        </div>
+                        <span className="rounded-full border border-[color:var(--border)] px-3 py-1 text-xs font-semibold text-[color:var(--muted)]">
+                          Abrir
+                        </span>
+                      </div>
+                      <p className="mt-3 text-xs text-[color:var(--muted)]">
+                        Actualizada {prettyDate(list.updatedAt)}
+                      </p>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-8 text-sm leading-6 text-[color:var(--muted)]">
+                    Aun no tenes listas propias. Cuando crees una, va a aparecer
+                    aca.
+                  </div>
+                )}
+              </div>
+            </section>
+
             <section className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--foreground)] p-6 text-[color:var(--background)] shadow-[var(--shadow)]">
               <p className="text-xs uppercase tracking-[0.24em] text-[color:rgba(255,255,255,0.68)]">
                 Ultima lista abierta

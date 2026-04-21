@@ -1,6 +1,8 @@
+import "server-only";
+
 import { randomBytes } from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
+
+import { prisma } from "@/lib/prisma";
 
 export const ITEM_STATUSES = ["pendiente", "agregado", "resuelto"] as const;
 
@@ -12,6 +14,7 @@ export interface ShoppingList {
   title: string;
   createdAt: string;
   updatedAt: string;
+  ownerParticipantId: string | null;
 }
 
 export interface Participant {
@@ -32,30 +35,18 @@ export interface ShoppingItem {
   updatedByParticipantId: string | null;
 }
 
-export interface StoreData {
-  lists: ShoppingList[];
-  participants: Participant[];
-  items: ShoppingItem[];
-}
-
 export interface ListDetails {
   list: ShoppingList;
   items: ShoppingItem[];
 }
 
-const STORE_DIR = path.join(process.cwd(), ".data");
-const STORE_FILE = path.join(STORE_DIR, "listamercado-store.json");
-
-function defaultStore(): StoreData {
-  return {
-    lists: [],
-    participants: [],
-    items: [],
-  };
-}
-
-function now() {
-  return new Date().toISOString();
+export interface OwnedListSummary {
+  id: string;
+  shareCode: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  itemCount: number;
 }
 
 function randomId(bytes = 9) {
@@ -66,75 +57,109 @@ function normalizeName(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-function readStoreFile(): StoreData {
-  if (!fs.existsSync(STORE_FILE)) {
-    return defaultStore();
-  }
-
-  const raw = fs.readFileSync(STORE_FILE, "utf8").trim();
-  if (!raw) {
-    return defaultStore();
-  }
-
-  const parsed = JSON.parse(raw) as Partial<StoreData>;
+function mapList(record: {
+  id: string;
+  shareCode: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+  ownerParticipantId: string | null;
+}): ShoppingList {
   return {
-    lists: Array.isArray(parsed.lists) ? parsed.lists : [],
-    participants: Array.isArray(parsed.participants) ? parsed.participants : [],
-    items: Array.isArray(parsed.items) ? parsed.items : [],
+    id: record.id,
+    shareCode: record.shareCode,
+    title: record.title,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    ownerParticipantId: record.ownerParticipantId,
   };
 }
 
-function writeStoreFile(store: StoreData) {
-  fs.mkdirSync(STORE_DIR, { recursive: true });
-  const tmpFile = `${STORE_FILE}.${process.pid}.tmp`;
-  fs.writeFileSync(tmpFile, JSON.stringify(store, null, 2), "utf8");
-  fs.renameSync(tmpFile, STORE_FILE);
+function mapParticipant(record: {
+  id: string;
+  label: string;
+  createdAt: Date;
+  lastSeenAt: Date;
+}): Participant {
+  return {
+    id: record.id,
+    label: record.label,
+    createdAt: record.createdAt.toISOString(),
+    lastSeenAt: record.lastSeenAt.toISOString(),
+  };
 }
 
-export function getStore() {
-  return readStoreFile();
+function mapItem(record: {
+  id: string;
+  listId: string;
+  name: string;
+  normalizedName: string;
+  status: ItemStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  updatedByParticipantId: string | null;
+}): ShoppingItem {
+  return {
+    id: record.id,
+    listId: record.listId,
+    name: record.name,
+    normalizedName: record.normalizedName,
+    status: record.status,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    updatedByParticipantId: record.updatedByParticipantId,
+  };
 }
 
-export function saveStore(store: StoreData) {
-  writeStoreFile(store);
+function sortItems(items: ShoppingItem[]) {
+  const statusOrder: Record<ItemStatus, number> = {
+    pendiente: 0,
+    agregado: 1,
+    resuelto: 2,
+  };
+
+  return items.sort((left, right) => {
+    const orderDiff = statusOrder[left.status] - statusOrder[right.status];
+
+    if (orderDiff !== 0) {
+      return orderDiff;
+    }
+
+    return right.updatedAt.localeCompare(left.updatedAt);
+  });
 }
 
-export function getListByShareCode(shareCode: string) {
-  const store = getStore();
-  const list = store.lists.find((entry) => entry.shareCode === shareCode);
+export async function getListByShareCode(
+  shareCode: string,
+): Promise<ListDetails | null> {
+  const list = await prisma.shoppingList.findUnique({
+    where: { shareCode },
+    include: { items: true },
+  });
 
   if (!list) {
     return null;
   }
 
-  const items = store.items
-    .filter((item) => item.listId === list.id)
-    .sort((left, right) => {
-      const statusOrder: Record<ItemStatus, number> = {
-        pendiente: 0,
-        agregado: 1,
-        resuelto: 2,
-      };
-
-      const orderDiff =
-        statusOrder[left.status] - statusOrder[right.status];
-
-      if (orderDiff !== 0) {
-        return orderDiff;
-      }
-
-      return right.updatedAt.localeCompare(left.updatedAt);
-    });
-
-  return { list, items } satisfies ListDetails;
+  return {
+    list: mapList(list),
+    items: sortItems(list.items.map(mapItem)),
+  };
 }
 
-export function getParticipantById(participantId: string) {
-  const store = getStore();
-  return store.participants.find((entry) => entry.id === participantId) ?? null;
+export async function getParticipantById(
+  participantId: string,
+): Promise<Participant | null> {
+  const participant = await prisma.participant.findUnique({
+    where: { id: participantId },
+  });
+
+  return participant ? mapParticipant(participant) : null;
 }
 
-export function getLatestListByShareCode(shareCode: string | null) {
+export async function getLatestListByShareCode(
+  shareCode: string | null,
+): Promise<ListDetails | null> {
   if (!shareCode) {
     return null;
   }
@@ -142,82 +167,146 @@ export function getLatestListByShareCode(shareCode: string | null) {
   return getListByShareCode(shareCode);
 }
 
-export function createParticipant(store: StoreData) {
-  const createdAt = now();
-  const participant: Participant = {
-    id: randomId(),
-    label: `Invitado ${randomBytes(2).toString("hex").toUpperCase()}`,
-    createdAt,
-    lastSeenAt: createdAt,
-  };
+export async function getOwnedListsByParticipantId(
+  participantId: string | null,
+): Promise<OwnedListSummary[]> {
+  if (!participantId) {
+    return [];
+  }
 
-  store.participants.push(participant);
-  return participant;
+  const lists = await prisma.shoppingList.findMany({
+    where: { ownerParticipantId: participantId },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    include: {
+      _count: {
+        select: {
+          items: true,
+        },
+      },
+    },
+  });
+
+  return lists.map((record) => ({
+    id: record.id,
+    shareCode: record.shareCode,
+    title: record.title,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    itemCount: record._count.items,
+  }));
 }
 
-export function touchParticipant(store: StoreData, participantId: string) {
-  const participant = store.participants.find((entry) => entry.id === participantId);
+export async function ensureParticipant(
+  participantId: string | null,
+): Promise<Participant> {
+  if (participantId) {
+    const existing = await prisma.participant.findUnique({
+      where: { id: participantId },
+    });
+
+    if (existing) {
+      const updated = await prisma.participant.update({
+        where: { id: participantId },
+        data: { lastSeenAt: new Date() },
+      });
+
+      return mapParticipant(updated);
+    }
+  }
+
+  const createdAt = new Date();
+  const participant = await prisma.participant.create({
+    data: {
+      id: randomId(),
+      label: `Invitado ${randomBytes(2).toString("hex").toUpperCase()}`,
+      createdAt,
+      lastSeenAt: createdAt,
+    },
+  });
+
+  return mapParticipant(participant);
+}
+
+export async function updateParticipantLabel(
+  participantId: string,
+  label: string,
+) {
+  const cleanedLabel = label.trim();
+
+  if (!cleanedLabel) {
+    return null;
+  }
+
+  const participant = await prisma.participant.findUnique({
+    where: { id: participantId },
+  });
 
   if (!participant) {
     return null;
   }
 
-  participant.lastSeenAt = now();
-  return participant;
+  const updated = await prisma.participant.update({
+    where: { id: participantId },
+    data: {
+      label: cleanedLabel,
+      lastSeenAt: new Date(),
+    },
+  });
+
+  return mapParticipant(updated);
 }
 
-export function ensureParticipant(store: StoreData, participantId: string | null) {
-  if (participantId) {
-    const existing = touchParticipant(store, participantId);
-    if (existing) {
-      return existing;
-    }
-  }
+export async function createList(title: string, ownerParticipantId: string) {
+  const timestamp = new Date();
+  const list = await prisma.shoppingList.create({
+    data: {
+      id: randomId(),
+      shareCode: randomId(12),
+      title: title.trim() || "Lista del mercado",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ownerParticipantId,
+    },
+  });
 
-  return createParticipant(store);
+  return mapList(list);
 }
 
-export function createList(title: string) {
-  const store = getStore();
-  const createdAt = now();
-  const list: ShoppingList = {
-    id: randomId(),
-    shareCode: randomId(12),
-    title: title.trim() || "Lista del mercado",
-    createdAt,
-    updatedAt: createdAt,
-  };
+export async function renameList(shareCode: string, title: string) {
+  const cleanedTitle = title.trim();
 
-  store.lists.push(list);
-  saveStore(store);
-  return list;
-}
-
-export function renameList(shareCode: string, title: string) {
-  const store = getStore();
-  const list = store.lists.find((entry) => entry.shareCode === shareCode);
-
-  if (!list) {
+  if (!cleanedTitle) {
     return null;
   }
 
-  const cleanedTitle = title.trim();
-  if (cleanedTitle) {
-    list.title = cleanedTitle;
-    list.updatedAt = now();
-    saveStore(store);
+  const existing = await prisma.shoppingList.findUnique({
+    where: { shareCode },
+  });
+
+  if (!existing) {
+    return null;
   }
 
-  return list;
+  const list = await prisma.shoppingList.update({
+    where: { shareCode },
+    data: {
+      title: cleanedTitle,
+      updatedAt: new Date(),
+    },
+  });
+
+  return mapList(list);
 }
 
-export function addItemToList(
+export async function addItemToList(
   shareCode: string,
   name: string,
   participantId: string | null,
 ) {
-  const store = getStore();
-  const list = store.lists.find((entry) => entry.shareCode === shareCode);
+  const list = await prisma.shoppingList.findUnique({
+    where: { shareCode },
+    select: { id: true },
+  });
 
   if (!list) {
     return null;
@@ -228,51 +317,76 @@ export function addItemToList(
     return null;
   }
 
-  const timestamp = now();
-  const item: ShoppingItem = {
-    id: randomId(),
-    listId: list.id,
-    name: trimmedName,
-    normalizedName: normalizeName(trimmedName),
-    status: "pendiente",
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    updatedByParticipantId: participantId,
-  };
+  const timestamp = new Date();
+  const [item] = await prisma.$transaction([
+    prisma.shoppingItem.create({
+      data: {
+        id: randomId(),
+        listId: list.id,
+        name: trimmedName,
+        normalizedName: normalizeName(trimmedName),
+        status: "pendiente",
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        updatedByParticipantId: participantId,
+      },
+    }),
+    prisma.shoppingList.update({
+      where: { id: list.id },
+      data: {
+        updatedAt: timestamp,
+      },
+    }),
+  ]);
 
-  store.items.push(item);
-  list.updatedAt = timestamp;
-  saveStore(store);
-  return item;
+  return mapItem(item);
 }
 
-export function updateItemStatus(
+export async function updateItemStatus(
   shareCode: string,
   itemId: string,
   status: ItemStatus,
   participantId: string | null,
 ) {
-  const store = getStore();
-  const list = store.lists.find((entry) => entry.shareCode === shareCode);
+  const list = await prisma.shoppingList.findUnique({
+    where: { shareCode },
+    select: { id: true },
+  });
 
   if (!list) {
     return null;
   }
 
-  const item = store.items.find(
-    (entry) => entry.id === itemId && entry.listId === list.id,
-  );
+  const item = await prisma.shoppingItem.findFirst({
+    where: {
+      id: itemId,
+      listId: list.id,
+    },
+  });
 
   if (!item) {
     return null;
   }
 
-  item.status = status;
-  item.updatedAt = now();
-  item.updatedByParticipantId = participantId;
-  list.updatedAt = item.updatedAt;
-  saveStore(store);
-  return item;
+  const timestamp = new Date();
+  const [updatedItem] = await prisma.$transaction([
+    prisma.shoppingItem.update({
+      where: { id: item.id },
+      data: {
+        status,
+        updatedAt: timestamp,
+        updatedByParticipantId: participantId,
+      },
+    }),
+    prisma.shoppingList.update({
+      where: { id: list.id },
+      data: {
+        updatedAt: timestamp,
+      },
+    }),
+  ]);
+
+  return mapItem(updatedItem);
 }
 
 export function getStatusCounts(items: ShoppingItem[]) {
@@ -290,4 +404,3 @@ export function groupItemsByStatus(items: ShoppingItem[]) {
     resuelto: items.filter((item) => item.status === "resuelto"),
   };
 }
-

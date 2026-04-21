@@ -8,9 +8,8 @@ import {
   addItemToList,
   createList,
   ensureParticipant,
-  getStore,
+  updateParticipantLabel,
   renameList,
-  saveStore,
   updateItemStatus,
   type ItemStatus,
 } from "@/lib/store";
@@ -27,10 +26,8 @@ const COOKIE_OPTIONS = {
 
 export async function touchSession(shareCode?: string) {
   const cookieStore = await cookies();
-  const store = getStore();
   const existingParticipantId = cookieStore.get(SESSION_COOKIE)?.value ?? null;
-  const participant = ensureParticipant(store, existingParticipantId);
-  saveStore(store);
+  const participant = await ensureParticipant(existingParticipantId);
 
   cookieStore.set(SESSION_COOKIE, participant.id, COOKIE_OPTIONS);
 
@@ -46,14 +43,26 @@ export async function touchSession(shareCode?: string) {
 
 export async function createShoppingList(formData: FormData) {
   const title = String(formData.get("title") ?? "");
-  const list = createList(title);
-  const participant = await touchSession(list.shareCode);
-  const cookieStore = await cookies();
+  const participant = await touchSession();
+  const createdList = await createList(title, participant.participantId);
+  await touchSession(createdList.shareCode);
 
-  cookieStore.set(SESSION_COOKIE, participant.participantId, COOKIE_OPTIONS);
-  cookieStore.set(LAST_LIST_COOKIE, list.shareCode, COOKIE_OPTIONS);
+  redirect(`/l/${createdList.shareCode}`);
+}
 
-  redirect(`/l/${list.shareCode}`);
+export async function updateParticipantName(formData: FormData) {
+  const label = String(formData.get("label") ?? "");
+  const shareCode = String(formData.get("shareCode") ?? "").trim() || null;
+  const participant = await touchSession(shareCode ?? undefined);
+  const updated = await updateParticipantLabel(participant.participantId, label);
+
+  if (updated) {
+    revalidatePath("/");
+
+    if (shareCode) {
+      revalidatePath(`/l/${shareCode}`);
+    }
+  }
 }
 
 export async function renameShoppingList(
@@ -61,7 +70,7 @@ export async function renameShoppingList(
   formData: FormData,
 ) {
   const title = String(formData.get("title") ?? "");
-  const renamed = renameList(shareCode, title);
+  const renamed = await renameList(shareCode, title);
 
   if (renamed) {
     revalidatePath(`/l/${shareCode}`);
@@ -71,7 +80,7 @@ export async function renameShoppingList(
 export async function addShoppingItem(shareCode: string, formData: FormData) {
   const name = String(formData.get("name") ?? "");
   const participant = await touchSession(shareCode);
-  const item = addItemToList(shareCode, name, participant.participantId);
+  const item = await addItemToList(shareCode, name, participant.participantId);
 
   if (item) {
     revalidatePath(`/l/${shareCode}`);
@@ -93,7 +102,7 @@ export async function updateShoppingItemStatus(
   }
 
   const participant = await touchSession(shareCode);
-  const updated = updateItemStatus(
+  const updated = await updateItemStatus(
     shareCode,
     itemId,
     status,

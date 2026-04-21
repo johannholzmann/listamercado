@@ -14,6 +14,7 @@ import {
   renameShoppingList,
   updateShoppingItemStatus,
 } from "@/app/actions";
+import { ParticipantCard } from "@/app/components/participant-card";
 import { CopyLinkButton } from "@/app/components/copy-link-button";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
 
@@ -48,7 +49,12 @@ export default async function ListPage({
   params: Promise<{ shareCode: string }>;
 }) {
   const { shareCode } = await params;
-  const details = getListByShareCode(shareCode);
+  const cookieStore = await cookies();
+  const participantId = cookieStore.get("listamercado_session")?.value ?? null;
+  const [details, participant] = await Promise.all([
+    getListByShareCode(shareCode),
+    participantId ? getParticipantById(participantId) : Promise.resolve(null),
+  ]);
 
   if (!details) {
     notFound();
@@ -57,9 +63,6 @@ export default async function ListPage({
   const { list, items } = details;
   const counts = getStatusCounts(items);
   const groupedItems = groupItemsByStatus(items);
-  const cookieStore = await cookies();
-  const participantId = cookieStore.get("listamercado_session")?.value ?? null;
-  const participant = participantId ? getParticipantById(participantId) : null;
 
   const renameAction = renameShoppingList.bind(null, shareCode);
   const addItemAction = addShoppingItem.bind(null, shareCode);
@@ -91,15 +94,13 @@ export default async function ListPage({
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 text-sm text-[color:var(--muted)]">
-            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3">
-              <p className="text-xs uppercase tracking-[0.22em] text-[color:var(--muted)]">
-                Tu sesion
-              </p>
-              <p className="mt-1 font-medium text-[color:var(--foreground)]">
-                {participant?.label ?? "Sesion temporal activa"}
-              </p>
-            </div>
+          <div className="flex w-full max-w-xl flex-col gap-3 text-sm text-[color:var(--muted)]">
+            <ParticipantCard
+              label={participant?.label ?? "Sesion temporal activa"}
+              shareCode={shareCode}
+              heading="Tu sesion"
+              helperText="Tu nombre se usa en esta lista y en cualquier otra que crees con esta misma sesion."
+            />
             <CopyLinkButton path={sharePath} />
           </div>
         </header>

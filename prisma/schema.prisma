@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ItemStatus {
+  pendiente
+  agregado
+  resuelto
+}
+
+model ShoppingList {
+  id                String         @id
+  shareCode         String         @unique
+  title             String
+  createdAt         DateTime
+  updatedAt         DateTime
+  ownerParticipantId String?
+  ownerParticipant   Participant?   @relation("OwnedLists", fields: [ownerParticipantId], references: [id], onDelete: SetNull)
+  items              ShoppingItem[]
+
+  @@index([updatedAt])
+  @@index([ownerParticipantId, updatedAt])
+}
+
+model Participant {
+  id           String         @id
+  label        String
+  createdAt    DateTime
+  lastSeenAt   DateTime
+  ownedLists   ShoppingList[]  @relation("OwnedLists")
+  updatedItems ShoppingItem[] @relation("ItemUpdatedBy")
+}
+
+model ShoppingItem {
+  id                     String        @id
+  listId                 String
+  list                   ShoppingList  @relation(fields: [listId], references: [id], onDelete: Cascade)
+  name                   String
+  normalizedName         String
+  status                 ItemStatus
+  createdAt              DateTime
+  updatedAt              DateTime
+  updatedByParticipantId String?
+  updatedByParticipant    Participant?  @relation("ItemUpdatedBy", fields: [updatedByParticipantId], references: [id], onDelete: SetNull)
+
+  @@index([listId, status, updatedAt])
+  @@index([listId, normalizedName])
+}

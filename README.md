@@ -30,8 +30,10 @@ El proyecto esta pensado para escenarios cotidianos:
 
 ## Modelo actual
 
-- La lista vive en un store persistente del backend del proyecto.
+- La lista vive en PostgreSQL a traves de Prisma.
 - La sesion temporal identifica al dispositivo o participante, pero no requiere login.
+- Cada lista nueva queda asociada al participante que la creo, para que luego pueda volver a verla desde la pantalla principal.
+- El participante puede editar su nombre sin crear una cuenta formal.
 - Los productos se guardan como texto libre para no frenar la carga rapida.
 - Cada item puede pasar por los estados `pendiente`, `agregado` y `resuelto`, que en la interfaz se muestran como `por comprar`, `comprado` y `ya no hace falta`.
 
@@ -44,7 +46,7 @@ El proyecto esta pensado para escenarios cotidianos:
 
 ## Estado del repositorio
 
-La aplicacion ya cuenta con una primera version funcional de listas compartidas, persistencia local y mutaciones del lado del servidor.
+La aplicacion ya cuenta con una primera version funcional de listas compartidas, sesiones temporales y mutaciones del lado del servidor sobre Prisma + Postgres.
 
 ## Como trabajar este proyecto
 
@@ -53,9 +55,22 @@ La aplicacion ya cuenta con una primera version funcional de listas compartidas,
 - Evitar decisiones de arquitectura innecesarias mientras el producto siga definiendose.
 - Si se agregan reglas nuevas para agentes, reflejarlas tambien en la documentacion principal.
 
+## Configuracion de base de datos
+
+- Definir `DATABASE_URL` con la conexion a Neon u otro Postgres compatible.
+- Ejecutar `npm run db:generate` cuando cambie `prisma/schema.prisma`.
+- Ejecutar `npm run db:migrate` para aplicar el esquema en la base elegida.
+- Mantener el cliente de Prisma del lado del servidor; no exponer credenciales al browser.
+
+## Acceso a listas propias
+
+- Las listas creadas por una sesion quedan ligadas al `participantId` de esa sesion.
+- La pantalla principal muestra un acceso rapido a todas las listas creadas con ese nombre.
+- Cambiar el nombre del participante no rompe el acceso a sus listas, porque la relacion se guarda por id y no por texto visible.
+
 ## Proximos pasos naturales
 
-- Reemplazar el store local por una base real cuando el despliegue lo pida.
+- Completar el onboarding de base de datos en desarrollo y Vercel.
 - Agregar invitaciones o permisos si hace falta controlar el acceso.
 - Sumar sugerencias de productos sin bloquear la carga libre.
 - Mejorar la experiencia de edicion rapida desde celular.
