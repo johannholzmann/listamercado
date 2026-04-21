@@ -9,15 +9,18 @@ import {
   groupItemsByStatus,
   ITEM_STATUSES,
 } from "@/lib/store";
+import { formatQuantity } from "@/lib/item-metadata";
 import {
   addShoppingItem,
   renameShoppingList,
+  updateShoppingItemDetails,
   updateShoppingItemStatus,
 } from "@/app/actions";
 import { ParticipantCard } from "@/app/components/participant-card";
 import { CopyLinkButton } from "@/app/components/copy-link-button";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
+import { ShoppingItemDetailsForm } from "@/app/components/shopping-item-details-form";
 import { ShoppingItemForm } from "@/app/components/shopping-item-form";
 
 const STATUS_TITLES: Record<(typeof ITEM_STATUSES)[number], string> = {
@@ -68,6 +71,7 @@ export default async function ListPage({
 
   const renameAction = renameShoppingList.bind(null, shareCode);
   const addItemAction = addShoppingItem.bind(null, shareCode);
+  const editItemAction = updateShoppingItemDetails.bind(null, shareCode);
   const statusAction = updateShoppingItemStatus.bind(null, shareCode);
   const sharePath = `/l/${shareCode}`;
 
@@ -157,12 +161,12 @@ export default async function ListPage({
                     Agregar producto
                   </p>
                   <h2 className="mt-1 font-display text-2xl text-[color:var(--foreground)]">
-                    Cargar cualquier nombre, sin catalogo cerrado
+                    Cargar rapido el producto y, si hace falta, sus detalles
                   </h2>
                 </div>
                 <p className="max-w-sm text-sm leading-6 text-[color:var(--muted)]">
-                  El texto se guarda tal cual lo escribe cada persona, para que la
-                  carga siga siendo rapida.
+                  El titulo sigue siendo lo unico obligatorio. Marca, cantidad,
+                  unidad y notas quedan como contexto opcional.
                 </p>
               </div>
 
@@ -210,6 +214,30 @@ export default async function ListPage({
                                 <p className="text-base font-semibold text-[color:var(--foreground)]">
                                   {item.name}
                                 </p>
+                                <div className="flex flex-wrap gap-2 text-xs text-[color:var(--muted)]">
+                                  {item.brand ? (
+                                    <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1">
+                                      Marca: {item.brand}
+                                    </span>
+                                  ) : null}
+                                  {formatQuantity(
+                                    item.quantityAmount,
+                                    item.quantityUnit,
+                                  ) ? (
+                                    <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1">
+                                      Cantidad:{" "}
+                                      {formatQuantity(
+                                        item.quantityAmount,
+                                        item.quantityUnit,
+                                      )}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                {item.notes ? (
+                                  <p className="text-sm leading-6 text-[color:var(--muted)]">
+                                    {item.notes}
+                                  </p>
+                                ) : null}
                                 <p className="text-xs text-[color:var(--muted)]">
                                   Guardado {prettyDate(item.createdAt)}
                                 </p>
@@ -250,6 +278,17 @@ export default async function ListPage({
                                 </button>
                               </div>
                             </form>
+                            <ShoppingItemDetailsForm
+                              action={editItemAction}
+                              item={{
+                                id: item.id,
+                                name: item.name,
+                                brand: item.brand,
+                                quantityAmount: item.quantityAmount,
+                                quantityUnit: item.quantityUnit,
+                                notes: item.notes,
+                              }}
+                            />
                           </article>
                         ))
                       )}

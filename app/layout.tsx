@@ -26,11 +26,11 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
   ),
   title: "que compramos",
   description:
-    "que compramos es una lista compartida y persistente para compras del supermercado, con enlace secreto y productos de texto libre.",
+    "que compramos es una lista compartida y persistente para compras del supermercado, con enlace secreto, titulo libre y detalles opcionales por producto.",
   icons: {
     icon: "/icon.png",
   },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     type: "website",
     title: "que compramos",
     description:
-      "que compramos es una lista compartida y persistente para compras del supermercado.",
+      "que compramos es una lista compartida y persistente para compras del supermercado, con detalles opcionales por producto.",
     images: [
       {
         url: "/icon.png",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "que compramos",
     description:
-      "que compramos es una lista compartida y persistente para compras del supermercado.",
+      "que compramos es una lista compartida y persistente para compras del supermercado, con detalles opcionales por producto.",
     images: ["/icon.png"],
   },
 };

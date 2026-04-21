@@ -3,6 +3,10 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 
 import { prisma } from "@/lib/prisma";
+import {
+  normalizeQuantityInput,
+  type QuantityUnit,
+} from "@/lib/item-metadata";
 
 export const ITEM_STATUSES = ["pendiente", "agregado", "resuelto"] as const;
 
@@ -29,6 +33,10 @@ export interface ShoppingItem {
   listId: string;
   name: string;
   normalizedName: string;
+  brand: string | null;
+  quantityAmount: string | null;
+  quantityUnit: QuantityUnit | null;
+  notes: string | null;
   status: ItemStatus;
   createdAt: string;
   updatedAt: string;
@@ -101,6 +109,10 @@ function mapItem(record: {
   listId: string;
   name: string;
   normalizedName: string;
+  brand: string | null;
+  quantityAmount: string | null;
+  quantityUnit: QuantityUnit | null;
+  notes: string | null;
   status: ItemStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -111,6 +123,10 @@ function mapItem(record: {
     listId: record.listId,
     name: record.name,
     normalizedName: record.normalizedName,
+    brand: record.brand,
+    quantityAmount: record.quantityAmount,
+    quantityUnit: record.quantityUnit,
+    notes: record.notes,
     status: record.status,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
@@ -151,6 +167,36 @@ export async function getListByShareCode(
   return {
     list: mapList(list),
     items: sortItems(list.items.map(mapItem)),
+  };
+}
+
+function cleanOptionalText(value: string) {
+  const cleaned = value.trim();
+  return cleaned.length ? cleaned : null;
+}
+
+function normalizeItemPayload(input: {
+  name: string;
+  brand: string;
+  quantityAmount: string;
+  quantityUnit: string;
+  notes: string;
+}) {
+  const cleanedName = input.name.trim();
+  const cleanedBrand = cleanOptionalText(input.brand);
+  const cleanedNotes = cleanOptionalText(input.notes);
+  const quantity = normalizeQuantityInput(
+    input.quantityAmount,
+    input.quantityUnit,
+  );
+
+  return {
+    name: cleanedName,
+    normalizedName: normalizeName(cleanedName),
+    brand: cleanedBrand,
+    quantityAmount: quantity.quantityAmount,
+    quantityUnit: quantity.quantityUnit,
+    notes: cleanedNotes,
   };
 }
 
@@ -307,7 +353,13 @@ export async function renameList(shareCode: string, title: string) {
 
 export async function addItemToList(
   shareCode: string,
-  name: string,
+  input: {
+    name: string;
+    brand: string;
+    quantityAmount: string;
+    quantityUnit: string;
+    notes: string;
+  },
   participantId: string | null,
 ) {
   const list = await prisma.shoppingList.findUnique({
@@ -319,19 +371,24 @@ export async function addItemToList(
     return null;
   }
 
-  const trimmedName = name.trim();
-  if (!trimmedName) {
+  const itemData = normalizeItemPayload(input);
+
+  if (!itemData.name) {
     return null;
   }
 
   const timestamp = new Date();
-  const [item] = await prisma.$transaction([
+  const [createdItem] = await prisma.$transaction([
     prisma.shoppingItem.create({
       data: {
         id: randomId(),
         listId: list.id,
-        name: trimmedName,
-        normalizedName: normalizeName(trimmedName),
+        name: itemData.name,
+        normalizedName: itemData.normalizedName,
+        brand: itemData.brand,
+        quantityAmount: itemData.quantityAmount,
+        quantityUnit: itemData.quantityUnit,
+        notes: itemData.notes,
         status: "pendiente",
         createdAt: timestamp,
         updatedAt: timestamp,
@@ -346,7 +403,70 @@ export async function addItemToList(
     }),
   ]);
 
-  return mapItem(item);
+  return mapItem(createdItem);
+}
+
+export async function updateItemDetails(
+  shareCode: string,
+  itemId: string,
+  input: {
+    name: string;
+    brand: string;
+    quantityAmount: string;
+    quantityUnit: string;
+    notes: string;
+  },
+  participantId: string | null,
+) {
+  const list = await prisma.shoppingList.findUnique({
+    where: { shareCode },
+    select: { id: true },
+  });
+
+  if (!list) {
+    return null;
+  }
+
+  const existing = await prisma.shoppingItem.findFirst({
+    where: {
+      id: itemId,
+      listId: list.id,
+    },
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  const item = normalizeItemPayload(input);
+
+  if (!item.name) {
+    return null;
+  }
+
+  const timestamp = new Date();
+  const [updatedItem] = await prisma.$transaction([
+    prisma.shoppingItem.update({
+      where: { id: existing.id },
+      data: {
+        name: item.name,
+        normalizedName: item.normalizedName,
+        brand: item.brand,
+        quantityAmount: item.quantityAmount,
+        quantityUnit: item.quantityUnit,
+        notes: item.notes,
+        updatedByParticipantId: participantId,
+      },
+    }),
+    prisma.shoppingList.update({
+      where: { id: list.id },
+      data: {
+        updatedAt: timestamp,
+      },
+    }),
+  ]);
+
+  return mapItem(updatedItem);
 }
 
 function mapProductSuggestion(record: {

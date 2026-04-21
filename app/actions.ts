@@ -10,6 +10,7 @@ import {
   ensureParticipant,
   updateParticipantLabel,
   renameList,
+  updateItemDetails,
   updateItemStatus,
   type ItemStatus,
 } from "@/lib/store";
@@ -78,9 +79,49 @@ export async function renameShoppingList(
 }
 
 export async function addShoppingItem(shareCode: string, formData: FormData) {
-  const name = String(formData.get("name") ?? "");
+  const itemData = {
+    name: String(formData.get("name") ?? ""),
+    brand: String(formData.get("brand") ?? ""),
+    quantityAmount: String(formData.get("quantityAmount") ?? ""),
+    quantityUnit: String(formData.get("quantityUnit") ?? ""),
+    notes: String(formData.get("notes") ?? ""),
+  };
   const participant = await touchSession(shareCode);
-  const item = await addItemToList(shareCode, name, participant.participantId);
+  const item = await addItemToList(
+    shareCode,
+    itemData,
+    participant.participantId,
+  );
+
+  if (item) {
+    revalidatePath(`/l/${shareCode}`);
+  }
+}
+
+export async function updateShoppingItemDetails(
+  shareCode: string,
+  formData: FormData,
+) {
+  const itemId = String(formData.get("itemId") ?? "");
+  const itemData = {
+    name: String(formData.get("name") ?? ""),
+    brand: String(formData.get("brand") ?? ""),
+    quantityAmount: String(formData.get("quantityAmount") ?? ""),
+    quantityUnit: String(formData.get("quantityUnit") ?? ""),
+    notes: String(formData.get("notes") ?? ""),
+  };
+
+  if (!itemId) {
+    return;
+  }
+
+  const participant = await touchSession(shareCode);
+  const item = await updateItemDetails(
+    shareCode,
+    itemId,
+    itemData,
+    participant.participantId,
+  );
 
   if (item) {
     revalidatePath(`/l/${shareCode}`);

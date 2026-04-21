@@ -13,6 +13,15 @@ enum ItemStatus {
   resuelto
 }
 
+enum QuantityUnit {
+  unidad
+  paquete
+  gramo
+  kilogramo
+  mililitro
+  litro
+}
+
 model ShoppingList {
   id                String         @id
   shareCode         String         @unique
@@ -42,6 +51,10 @@ model ShoppingItem {
   list                   ShoppingList  @relation(fields: [listId], references: [id], onDelete: Cascade)
   name                   String
   normalizedName         String
+  brand                  String?
+  quantityAmount         String?
+  quantityUnit           QuantityUnit?
+  notes                  String?
   status                 ItemStatus
   createdAt              DateTime
   updatedAt              DateTime

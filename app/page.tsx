@@ -45,7 +45,7 @@ export default async function Home() {
             <p className="max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-base">
               Pensada para varias personas, sin cuentas complejas. Un enlace
               secreto abre la misma lista para todos, y cada producto se guarda
-              con texto libre.
+              con un titulo libre y detalles opcionales.
             </p>
           </div>
 
@@ -99,8 +99,8 @@ export default async function Home() {
                   "Un enlace secreto lleva a la misma lista para todos.",
                 ],
                 [
-                  "Texto libre",
-                  "Cualquier persona puede escribir cualquier producto.",
+                  "Titulo libre",
+                  "Cualquier persona puede escribir rapido el producto y sumar detalle si hace falta.",
                 ],
                 [
                   "Estados simples",
@@ -190,8 +190,8 @@ export default async function Home() {
                   3. Cada participante puede agregar y cambiar estados sin login.
                 </p>
                 <p>
-                  4. Los productos se guardan como texto libre para no frenar el
-                  flujo.
+                  4. Los productos se crean con titulo obligatorio y detalles
+                  opcionales para no frenar el flujo.
                 </p>
               </div>
             </section>

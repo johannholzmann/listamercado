@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import {
+  QUANTITY_UNIT_LABELS,
+  QUANTITY_UNITS,
+  type QuantityUnit,
+} from "@/lib/item-metadata";
+
 type ProductSuggestion = {
   id: string;
   name: string;
@@ -21,6 +27,11 @@ export function ShoppingItemForm({
   shareCode,
 }: ShoppingItemFormProps) {
   const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [quantityAmount, setQuantityAmount] = useState("");
+  const [quantityUnit, setQuantityUnit] =
+    useState<QuantityUnit>("unidad");
+  const [notes, setNotes] = useState("");
   const [suggestions, setSuggestions] = useState<ProductSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -102,6 +113,10 @@ export function ShoppingItemForm({
     requestIdRef.current += 1;
     abortRef.current?.abort();
     setName("");
+    setBrand("");
+    setQuantityAmount("");
+    setQuantityUnit("unidad");
+    setNotes("");
   }
 
   const query = name.trim();
@@ -145,7 +160,7 @@ export function ShoppingItemForm({
   }
 
   return (
-    <form action={action} onSubmit={handleSubmit} className="mt-4 space-y-3">
+    <form action={action} onSubmit={handleSubmit} className="mt-4 space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row">
         <input
           type="text"
@@ -172,6 +187,81 @@ export function ShoppingItemForm({
           Agregar
         </button>
       </div>
+
+      <details className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3">
+        <summary className="cursor-pointer list-none text-sm font-semibold text-[color:var(--foreground)]">
+          Detalles opcionales
+        </summary>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="space-y-2">
+            <span className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+              Marca
+            </span>
+            <input
+              type="text"
+              name="brand"
+              value={brand}
+              onChange={(event) => setBrand(event.target.value)}
+              className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-base text-[color:var(--foreground)] outline-none transition placeholder:text-[color:var(--muted)] focus:border-[color:var(--accent)]"
+              placeholder="La Serenisima, Arcor..."
+            />
+          </label>
+
+          <div className="grid grid-cols-[minmax(0,1fr)_160px] gap-3">
+            <label className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                Cantidad
+              </span>
+              <input
+                type="number"
+                name="quantityAmount"
+                min="0"
+                step="0.1"
+                inputMode="decimal"
+                value={quantityAmount}
+                onChange={(event) => setQuantityAmount(event.target.value)}
+                className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-base text-[color:var(--foreground)] outline-none transition placeholder:text-[color:var(--muted)] focus:border-[color:var(--accent)]"
+                placeholder="1"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                Unidad
+              </span>
+              <select
+                name="quantityUnit"
+                value={quantityUnit}
+                onChange={(event) =>
+                  setQuantityUnit(event.target.value as QuantityUnit)
+                }
+                className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-base text-[color:var(--foreground)] outline-none transition focus:border-[color:var(--accent)]"
+              >
+                {QUANTITY_UNITS.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {QUANTITY_UNIT_LABELS[unit].optionLabel}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="space-y-2 sm:col-span-2">
+            <span className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+              Aspectos relevantes
+            </span>
+            <textarea
+              name="notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              rows={3}
+              className="w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-base text-[color:var(--foreground)] outline-none transition placeholder:text-[color:var(--muted)] focus:border-[color:var(--accent)]"
+              placeholder="Sin azucar, para la merienda, paquete grande..."
+            />
+          </label>
+        </div>
+      </details>
 
       <div className="space-y-2">
         {visibleSuggestions.length > 0 ? (
@@ -217,7 +307,7 @@ export function ShoppingItemForm({
         ) : null}
 
         <p className="text-xs leading-5 text-[color:var(--muted)]">
-          Podes escribir libremente; las sugerencias son opcionales y nunca
+          Podes escribir libremente; los detalles son opcionales y nunca
           bloquean el alta.
           {showLoading ? " Buscando coincidencias..." : ""}
         </p>

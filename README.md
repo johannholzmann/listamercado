@@ -34,7 +34,9 @@ El proyecto esta pensado para escenarios cotidianos:
 - La sesion temporal identifica al dispositivo o participante, pero no requiere login.
 - Cada lista nueva queda asociada al participante que la creo, para que luego pueda volver a verla desde la pantalla principal.
 - El participante puede editar su nombre sin crear una cuenta formal.
-- Los productos se guardan como texto libre para no frenar la carga rapida.
+- Los productos se crean con un titulo obligatorio y detalles opcionales para no frenar la carga rapida.
+- Esos detalles incluyen marca, cantidad, unidad y aspectos relevantes.
+- La unidad se elige desde un enum simple persistido en la base.
 - Mientras se escribe un producto, la UI sugiere hasta 3 coincidencias de listas anteriores donde esa sesion ya participo.
 - Cada item puede pasar por los estados `pendiente`, `agregado` y `resuelto`, que en la interfaz se muestran como `por comprar`, `comprado` y `ya no hace falta`.
 
