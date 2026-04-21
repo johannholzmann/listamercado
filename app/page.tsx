@@ -3,19 +3,13 @@ import { cookies } from "next/headers";
 
 import { createShoppingList } from "@/app/actions";
 import { ParticipantCard } from "@/app/components/participant-card";
+import { SiteNavbar } from "@/app/components/site-navbar";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
 import {
   getLatestListByShareCode,
   getParticipantById,
   getOwnedListsByParticipantId,
 } from "@/lib/store";
-
-function prettyDate(value: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
 
 export default async function Home() {
   const cookieStore = await cookies();
@@ -28,15 +22,18 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="relative min-h-screen overflow-hidden px-4 py-6 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen overflow-visible px-4 py-6 sm:px-6 lg:px-8">
       <SessionBootstrap />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(73,105,76,0.16),_transparent_36%),radial-gradient(circle_at_top_right,_rgba(232,140,65,0.16),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.32),_rgba(255,255,255,0))]" />
       <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <SiteNavbar
+          sessionLabel={participant?.label ?? null}
+          currentListHref={lastList ? `/l/${lastList.list.shareCode}` : null}
+          currentListLabel={lastList?.list.title ?? null}
+        />
+
         <header className="flex flex-col gap-4 rounded-[2rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-[var(--shadow)] backdrop-blur md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
-              ListaMercado
-            </p>
             <h1 className="font-display text-4xl leading-none text-[color:var(--foreground)] sm:text-5xl">
               Una lista compartida, simple y persistente
             </h1>
@@ -58,7 +55,10 @@ export default async function Home() {
 
         <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-4">
-            <section className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]">
+            <section
+              id="crear-lista"
+              className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]"
+            >
               <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
                 Crear lista
               </p>
@@ -120,50 +120,21 @@ export default async function Home() {
           <aside className="space-y-4">
             <section className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-[var(--shadow)]">
               <p className="text-xs uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                Tus listas
+                Mis listas
               </p>
               <h2 className="mt-2 font-display text-3xl text-[color:var(--foreground)]">
-                Todo lo que creaste con tu nombre
+                {ownedLists.length} listas creadas
               </h2>
               <p className="mt-3 max-w-md text-sm leading-6 text-[color:var(--muted)]">
-                Estas son las listas que quedaron asociadas a tu participante
-                temporal. Desde aca podes volver a cualquiera sin buscar el
-                enlace.
+                Todo lo que creaste con tu sesion vive en una pagina propia, mas
+                limpia y mas facil de escanear.
               </p>
-
-              <div className="mt-5 space-y-3">
-                {ownedLists.length > 0 ? (
-                  ownedLists.map((list) => (
-                    <Link
-                      key={list.id}
-                      href={`/l/${list.shareCode}`}
-                      className="block rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 transition hover:-translate-y-0.5 hover:border-[color:var(--accent)]"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="truncate font-display text-2xl text-[color:var(--foreground)]">
-                            {list.title}
-                          </p>
-                          <p className="mt-1 text-sm text-[color:var(--muted)]">
-                            {list.itemCount} productos
-                          </p>
-                        </div>
-                        <span className="rounded-full border border-[color:var(--border)] px-3 py-1 text-xs font-semibold text-[color:var(--muted)]">
-                          Abrir
-                        </span>
-                      </div>
-                      <p className="mt-3 text-xs text-[color:var(--muted)]">
-                        Actualizada {prettyDate(list.updatedAt)}
-                      </p>
-                    </Link>
-                  ))
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-8 text-sm leading-6 text-[color:var(--muted)]">
-                    Aun no tenes listas propias. Cuando crees una, va a aparecer
-                    aca.
-                  </div>
-                )}
-              </div>
+              <Link
+                href="/mis-listas"
+                className="mt-5 inline-flex rounded-full bg-[color:var(--foreground)] px-5 py-3 text-sm font-semibold text-[color:var(--background)] transition hover:-translate-y-0.5"
+              >
+                Ver mis listas
+              </Link>
             </section>
 
             <section className="rounded-[1.8rem] border border-[color:var(--border)] bg-[color:var(--foreground)] p-6 text-[color:var(--background)] shadow-[var(--shadow)]">
