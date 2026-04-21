@@ -18,6 +18,7 @@ import { ParticipantCard } from "@/app/components/participant-card";
 import { CopyLinkButton } from "@/app/components/copy-link-button";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { SessionBootstrap } from "@/app/components/session-bootstrap";
+import { ShoppingItemForm } from "@/app/components/shopping-item-form";
 
 const STATUS_TITLES: Record<(typeof ITEM_STATUSES)[number], string> = {
   pendiente: "Por comprar",
@@ -165,25 +166,7 @@ export default async function ListPage({
                 </p>
               </div>
 
-              <form
-                action={addItemAction}
-                className="mt-4 flex flex-col gap-3 sm:flex-row"
-              >
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  maxLength={120}
-                  className="min-w-0 flex-1 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-4 py-3 text-base text-[color:var(--foreground)] outline-none transition placeholder:text-[color:var(--muted)] focus:border-[color:var(--accent)]"
-                  placeholder="Leche, arroz, jabon, cafe..."
-                />
-                <button
-                  type="submit"
-                  className="rounded-2xl bg-[color:var(--foreground)] px-5 py-3 text-sm font-semibold text-[color:var(--background)] transition hover:-translate-y-0.5"
-                >
-                  Agregar
-                </button>
-              </form>
+              <ShoppingItemForm action={addItemAction} shareCode={shareCode} />
             </section>
 
             <section className="grid gap-4 xl:grid-cols-3">

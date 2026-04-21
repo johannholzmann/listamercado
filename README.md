@@ -35,6 +35,7 @@ El proyecto esta pensado para escenarios cotidianos:
 - Cada lista nueva queda asociada al participante que la creo, para que luego pueda volver a verla desde la pantalla principal.
 - El participante puede editar su nombre sin crear una cuenta formal.
 - Los productos se guardan como texto libre para no frenar la carga rapida.
+- Mientras se escribe un producto, la UI sugiere hasta 3 coincidencias de listas anteriores donde esa sesion ya participo.
 - Cada item puede pasar por los estados `pendiente`, `agregado` y `resuelto`, que en la interfaz se muestran como `por comprar`, `comprado` y `ya no hace falta`.
 
 ## Que deberia resolver en el futuro
@@ -74,4 +75,5 @@ La aplicacion ya cuenta con una primera version funcional de listas compartidas,
 - Completar el onboarding de base de datos en desarrollo y Vercel.
 - Agregar invitaciones o permisos si hace falta controlar el acceso.
 - Sumar sugerencias de productos sin bloquear la carga libre.
+- Ampliar las sugerencias hacia historial o catalogo compartido si el uso real lo pide.
 - Mejorar la experiencia de edicion rapida desde celular.

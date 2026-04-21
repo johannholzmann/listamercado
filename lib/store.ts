@@ -35,6 +35,13 @@ export interface ShoppingItem {
   updatedByParticipantId: string | null;
 }
 
+export interface ProductSuggestion {
+  id: string;
+  name: string;
+  normalizedName: string;
+  updatedAt: string;
+}
+
 export interface ListDetails {
   list: ShoppingList;
   items: ShoppingItem[];
@@ -53,7 +60,7 @@ function randomId(bytes = 9) {
   return randomBytes(bytes).toString("base64url");
 }
 
-function normalizeName(value: string) {
+export function normalizeName(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
@@ -340,6 +347,115 @@ export async function addItemToList(
   ]);
 
   return mapItem(item);
+}
+
+function mapProductSuggestion(record: {
+  id: string;
+  name: string;
+  normalizedName: string;
+  updatedAt: Date;
+}): ProductSuggestion {
+  return {
+    id: record.id,
+    name: record.name,
+    normalizedName: record.normalizedName,
+    updatedAt: record.updatedAt.toISOString(),
+  };
+}
+
+function dedupeByNormalizedName(items: ProductSuggestion[]) {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    if (seen.has(item.normalizedName)) {
+      return false;
+    }
+
+    seen.add(item.normalizedName);
+    return true;
+  });
+}
+
+export async function getProductSuggestions(
+  currentShareCode: string,
+  participantId: string | null,
+  query: string,
+  limit = 3,
+): Promise<ProductSuggestion[]> {
+  const normalizedQuery = normalizeName(query);
+
+  if (normalizedQuery.length < 2 || limit <= 0) {
+    return [];
+  }
+
+  if (!participantId) {
+    return [];
+  }
+
+  const currentList = await prisma.shoppingList.findUnique({
+    where: { shareCode: currentShareCode },
+    select: { id: true },
+  });
+
+  if (!currentList) {
+    return [];
+  }
+
+  const prefixMatches = await prisma.shoppingItem.findMany({
+    where: {
+      updatedByParticipantId: participantId,
+      listId: { not: currentList.id },
+      normalizedName: { startsWith: normalizedQuery },
+    },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    take: Math.max(limit * 4, 12),
+    select: {
+      id: true,
+      name: true,
+      normalizedName: true,
+      updatedAt: true,
+    },
+  });
+
+  const rankedPrefixMatches = dedupeByNormalizedName(
+    prefixMatches.map(mapProductSuggestion),
+  );
+
+  if (rankedPrefixMatches.length >= limit) {
+    return rankedPrefixMatches.slice(0, limit);
+  }
+
+  const seenNormalizedNames = rankedPrefixMatches.map(
+    (item) => item.normalizedName,
+  );
+
+  const containsMatches = await prisma.shoppingItem.findMany({
+    where: {
+      updatedByParticipantId: participantId,
+      listId: { not: currentList.id },
+      normalizedName: { contains: normalizedQuery },
+      ...(seenNormalizedNames.length
+        ? {
+            NOT: {
+              normalizedName: { in: seenNormalizedNames },
+            },
+          }
+        : {}),
+    },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    take: Math.max(limit * 4, 12),
+    select: {
+      id: true,
+      name: true,
+      normalizedName: true,
+      updatedAt: true,
+    },
+  });
+
+  return dedupeByNormalizedName([
+    ...rankedPrefixMatches,
+    ...containsMatches.map(mapProductSuggestion),
+  ]).slice(0, limit);
 }
 
 export async function updateItemStatus(
