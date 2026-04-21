@@ -26,13 +26,13 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
   ),
   title: "que compramos",
   description:
     "que compramos es una lista compartida y persistente para compras del supermercado, con enlace secreto y productos de texto libre.",
   icons: {
-    icon: "/quecompramos.png",
+    icon: "/icon.png",
   },
   openGraph: {
     type: "website",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
       "que compramos es una lista compartida y persistente para compras del supermercado.",
     images: [
       {
-        url: "/quecompramos.png",
+        url: "/icon.png",
         width: 2048,
         height: 2048,
         alt: "que compramos",
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     title: "que compramos",
     description:
       "que compramos es una lista compartida y persistente para compras del supermercado.",
-    images: ["/quecompramos.png"],
+    images: ["/icon.png"],
   },
 };
 
