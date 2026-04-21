@@ -41,9 +41,9 @@ export const metadata: Metadata = {
       "que compramos es una lista compartida y persistente para compras del supermercado, con detalles opcionales por producto.",
     images: [
       {
-        url: "/icon.png",
-        width: 2048,
-        height: 2048,
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
         alt: "que compramos",
       },
     ],
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     title: "que compramos",
     description:
       "que compramos es una lista compartida y persistente para compras del supermercado, con detalles opcionales por producto.",
-    images: ["/icon.png"],
+    images: ["/opengraph-image"],
   },
 };
 
