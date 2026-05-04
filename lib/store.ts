@@ -170,6 +170,15 @@ export async function getListByShareCode(
   };
 }
 
+export async function getListTitleByShareCode(shareCode: string) {
+  const list = await prisma.shoppingList.findUnique({
+    where: { shareCode },
+    select: { title: true },
+  });
+
+  return list?.title ?? null;
+}
+
 function cleanOptionalText(value: string) {
   const cleaned = value.trim();
   return cleaned.length ? cleaned : null;

@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import {
   getListByShareCode,
+  getListTitleByShareCode,
   getParticipantById,
   getStatusCounts,
   groupItemsByStatus,
@@ -33,6 +35,19 @@ const STATUS_BADGES: Record<(typeof ITEM_STATUSES)[number], string> = {
   agregado: "border-emerald-300 bg-emerald-100 text-emerald-950",
   resuelto: "border-slate-300 bg-slate-100 text-slate-950",
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ shareCode: string }>;
+}): Promise<Metadata> {
+  const { shareCode } = await params;
+  const title = await getListTitleByShareCode(shareCode);
+
+  return {
+    title: title ?? "Lista no encontrada",
+  };
+}
 
 export default async function ListPage({
   params,
