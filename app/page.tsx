@@ -9,16 +9,16 @@ import { SessionBootstrap } from "@/app/components/session-bootstrap";
 import {
   getLatestListByShareCode,
   getParticipantById,
-  getOwnedListsByParticipantId,
+  getOwnedListsCountByParticipantId,
 } from "@/lib/store";
 
 export default async function Home() {
   const cookieStore = await cookies();
   const lastShareCode = cookieStore.get("quecompramos_last_list")?.value ?? null;
   const participantId = cookieStore.get("quecompramos_session")?.value ?? null;
-  const [lastList, ownedLists, participant] = await Promise.all([
+  const [lastList, ownedListsCount, participant] = await Promise.all([
     getLatestListByShareCode(lastShareCode),
-    getOwnedListsByParticipantId(participantId),
+    getOwnedListsCountByParticipantId(participantId),
     participantId ? getParticipantById(participantId) : Promise.resolve(null),
   ]);
 
@@ -128,7 +128,7 @@ export default async function Home() {
                 Mis listas
               </p>
               <h2 className="mt-2 font-display text-3xl text-[color:var(--foreground)]">
-                {ownedLists.length} listas creadas
+                {ownedListsCount} listas creadas
               </h2>
               <p className="mt-3 max-w-md text-sm leading-6 text-[color:var(--muted)]">
                 Todo lo que creaste con tu sesion vive en una pagina propia, mas

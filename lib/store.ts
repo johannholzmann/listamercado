@@ -7,6 +7,11 @@ import {
   normalizeQuantityInput,
   type QuantityUnit,
 } from "@/lib/item-metadata";
+import {
+  LIST_PAGE_SIZE,
+  type ListSummary,
+  type PaginatedListPage,
+} from "@/lib/list-types";
 
 export const ITEM_STATUSES = ["pendiente", "agregado", "resuelto"] as const;
 
@@ -55,15 +60,6 @@ export interface ListDetails {
   items: ShoppingItem[];
 }
 
-export interface OwnedListSummary {
-  id: string;
-  shareCode: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-  itemCount: number;
-}
-
 function randomId(bytes = 9) {
   return randomBytes(bytes).toString("base64url");
 }
@@ -87,6 +83,26 @@ function mapList(record: {
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
     ownerParticipantId: record.ownerParticipantId,
+  };
+}
+
+function mapListSummary(record: {
+  id: string;
+  shareCode: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+  _count?: {
+    items: number;
+  };
+}): ListSummary {
+  return {
+    id: record.id,
+    shareCode: record.shareCode,
+    title: record.title,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    itemCount: record._count?.items ?? 0,
   };
 }
 
@@ -229,16 +245,42 @@ export async function getLatestListByShareCode(
   return getListByShareCode(shareCode);
 }
 
-export async function getOwnedListsByParticipantId(
+function normalizePageLimit(limit?: number) {
+  return Math.max(1, Math.min(limit ?? LIST_PAGE_SIZE, 24));
+}
+
+export async function getOwnedListsCountByParticipantId(
   participantId: string | null,
-): Promise<OwnedListSummary[]> {
+) {
   if (!participantId) {
-    return [];
+    return 0;
   }
 
-  const lists = await prisma.shoppingList.findMany({
+  return prisma.shoppingList.count({
     where: { ownerParticipantId: participantId },
-    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+  });
+}
+
+export async function getOwnedListsPageByParticipantId(
+  participantId: string | null,
+  options?: {
+    cursor?: string | null;
+    limit?: number;
+  },
+): Promise<PaginatedListPage<ListSummary>> {
+  if (!participantId) {
+    return {
+      items: [],
+      nextCursor: null,
+      totalCount: 0,
+    };
+  }
+
+  const limit = normalizePageLimit(options?.limit);
+  const baseQuery: Parameters<typeof prisma.shoppingList.findMany>[0] = {
+    where: { ownerParticipantId: participantId },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
     include: {
       _count: {
         select: {
@@ -246,16 +288,26 @@ export async function getOwnedListsByParticipantId(
         },
       },
     },
-  });
+  };
 
-  return lists.map((record) => ({
-    id: record.id,
-    shareCode: record.shareCode,
-    title: record.title,
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
-    itemCount: record._count.items,
-  }));
+  const lists = options?.cursor
+    ? await prisma.shoppingList.findMany({
+        ...baseQuery,
+        cursor: { id: options.cursor },
+        skip: 1,
+      })
+    : await prisma.shoppingList.findMany(baseQuery);
+
+  const hasMore = lists.length > limit;
+  const items = lists.slice(0, limit).map(mapListSummary);
+
+  return {
+    items,
+    nextCursor: hasMore ? items.at(-1)?.id ?? null : null,
+    totalCount: await prisma.shoppingList.count({
+      where: { ownerParticipantId: participantId },
+    }),
+  };
 }
 
 export async function ensureParticipant(

@@ -69,8 +69,9 @@ La aplicacion ya cuenta con una primera version funcional de listas compartidas,
 ## Acceso a listas propias
 
 - Las listas creadas por una sesion quedan ligadas al `participantId` de esa sesion.
-- La pantalla principal muestra un acceso rapido a todas las listas creadas con ese nombre.
+- La pantalla principal muestra un acceso rapido al total de listas creadas por esa sesion.
 - Cambiar el nombre del participante no rompe el acceso a sus listas, porque la relacion se guarda por id y no por texto visible.
+- La vista `Mis listas` carga los resultados en bloques con `Cargar mas` para que la pantalla siga liviana aun si se acumulan muchas listas.
 
 ## Proximos pasos naturales
 

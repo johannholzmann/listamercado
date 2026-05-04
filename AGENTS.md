@@ -29,3 +29,4 @@ La meta del producto es que varias personas puedan colaborar sobre la misma list
 
 - Leer este archivo antes de empezar cualquier tarea en el repo.
 - Mantener alineado `README.md` con cualquier cambio relevante de visión o alcance.
+- La vista `Mis listas` debe seguir siendo simple: mostrar solo listas creadas por la sesion y paginarlas con `Cargar mas` si crecen demasiado.
